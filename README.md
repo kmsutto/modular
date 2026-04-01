@@ -8,8 +8,6 @@ also, you can always send a pull request, we are open to this and will only be g
 
 to connect all the modules (screen, joystick) correctly, read the **[wire-guide.md](media/wire-guide.md)** instructions to connect everything correctly
 
-> [!warning]
-> the project is in the beta stage, so I do not guarantee stability.
 ---
 
 ## widgets and their work
