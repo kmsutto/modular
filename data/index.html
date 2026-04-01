@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>modular</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:   #0c0e0b;
+  --fg:   #e8e8e4;
+  --dim:  #4a4a46;
+  --dim2: #6a6a66;
+  --line: #1e1e1a;
+  --acc:  #9d9d9d;
+  --err:  #ffbaba;
+  --ok:   #b8ffd3;
+  --r:    3px;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'IBM Plex Mono', monospace;
+  min-height: 100dvh;
+}
+
+.wrap {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 48px 20px 80px;
+}
+
+header {
+  margin-bottom: 44px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; color: var(--acc); }
+
+.status-badge {
+  font-size: 9px; letter-spacing: 0.08em; color: var(--dim2);
+  display: flex; align-items: center; gap: 6px;
+}
+
+.dot { width: 5px; height: 5px; border-radius: 50%; background: var(--dim); flex-shrink: 0; }
+.dot.on { background: var(--ok); box-shadow: 0 0 5px var(--ok); }
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 28px;
+}
+
+.tab {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; font-weight: 500; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--dim);
+  background: none; border: none; border-bottom: 2px solid transparent;
+  padding: 10px 14px; cursor: pointer; margin-bottom: -1px;
+  transition: color 0.15s, border-color 0.15s;
+  width: auto; transform: none; opacity: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+.tab:hover { color: var(--fg); }
+.tab.active { color: var(--acc); border-bottom-color: var(--acc); }
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+.group { margin-bottom: 24px; }
+
+label {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 9px; font-weight: 500; letter-spacing: 0.2em;
+  color: var(--dim); text-transform: uppercase; margin-bottom: 8px;
+}
+label a {
+  font-size: 9px; color: var(--dim); text-decoration: none;
+  letter-spacing: 0.05em; transition: color 0.15s; text-transform: none;
+}
+label a:hover { color: var(--fg); }
+
+input {
+  width: 100%; background: transparent; border: none;
+  border-bottom: 1px solid var(--line); padding: 10px 0;
+  font-family: 'IBM Plex Mono', monospace; font-size: 14px;
+  font-weight: 300; color: var(--fg); outline: none;
+  transition: border-color 0.2s; border-radius: 0;
+  appearance: none;
+}
+input::placeholder { color: var(--dim); }
+input:focus { border-bottom-color: var(--acc); }
+
+.pass-wrap { position: relative; }
+.pass-wrap input { padding-right: 40px; }
+.eye-btn {
+  position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: var(--dim); font-size: 9px;
+  letter-spacing: 0.05em; cursor: pointer; padding: 6px;
+  width: auto; margin: 0; opacity: 1; transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.eye-btn:hover { color: var(--fg); opacity: 1; transform: translateY(-50%); }
+
+button.primary {
+  margin-top: 8px; width: 100%; padding: 14px;
+  background: var(--acc); color: #0a0a0a; border: none;
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 500;
+  letter-spacing: 0.25em; text-transform: uppercase;
+  border-radius: var(--r); cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+button.primary:hover { opacity: 0.88; }
+button.primary:active { transform: scale(0.98); }
+button.primary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+button.secondary {
+  width: 100%; padding: 12px; background: transparent;
+  color: var(--dim2); border: 1px solid var(--line);
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 400;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  border-radius: var(--r); cursor: pointer;
+  transition: border-color 0.15s, color 0.15s; margin-top: 8px;
+  -webkit-tap-highlight-color: transparent;
+}
+button.secondary:hover { border-color: var(--dim2); color: var(--fg); }
+
+#msg {
+  margin-top: 14px; font-size: 10px; letter-spacing: 0.08em;
+  min-height: 18px; text-align: center;
+}
+#msg.ok  { color: var(--ok); }
+#msg.err { color: var(--err); }
+
+.info-grid {
+  display: grid; gap: 1px; background: var(--line);
+  border: 1px solid var(--line); border-radius: var(--r);
+  overflow: hidden; margin-bottom: 16px;
+}
+.info-row {
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--bg); padding: 11px 14px; gap: 12px;
+}
+.info-key {
+  font-size: 9px; letter-spacing: 0.15em; color: var(--dim);
+  text-transform: uppercase; flex-shrink: 0;
+}
+.info-val { font-size: 11px; color: var(--fg); font-weight: 300; text-align: right; word-break: break-all; }
+.info-val.acc { color: var(--acc); }
+.info-val.ok  { color: var(--ok); }
+.info-val.err { color: var(--err); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">modular</div>
+    <div class="status-badge">
+      <div class="dot" id="wifi-dot"></div>
+      <span id="wifi-label">...</span>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab(this,'settings')">settings</button>
+    <button class="tab"        onclick="switchTab(this,'device')">device</button>
+  </div>
+
+  <div id="tab-settings" class="tab-panel active">
+    <form id="form">
+      <div class="group">
+        <label for="ssid">wi-fi network</label>
+        <input id="ssid" name="ssid" type="text" autocomplete="off" spellcheck="false" placeholder="ssid">
+      </div>
+      <div class="group">
+        <label for="pass">password</label>
+        <div class="pass-wrap">
+          <input id="pass" name="pass" type="password" autocomplete="off" placeholder="••••••">
+          <button type="button" class="eye-btn" id="eye-btn" onclick="togglePass()">show</button>
+        </div>
+      </div>
+      <div class="group">
+        <label for="city">city</label>
+        <input id="city" name="city" type="text" placeholder="kyiv">
+      </div>
+      <div class="group">
+        <label for="owmkey">
+          owm api key
+          <a href="https://openweathermap.org/api" target="_blank" rel="noopener">get ↗</a>
+        </label>
+        <input id="owmkey" name="owmkey" type="text" autocomplete="off" spellcheck="false" placeholder="api key">
+      </div>
+      <button type="submit" class="primary" id="btn"><span id="btn-text">save &amp; restart</span></button>
+      <button type="button" class="secondary" onclick="saveOnly()">save without restart</button>
+      <div id="msg"></div>
+    </form>
+  </div>
+
+  <div id="tab-device" class="tab-panel">
+    <div class="info-grid">
+      <div class="info-row"><span class="info-key">sta ip</span>    <span class="info-val acc" id="d-ip">—</span></div>
+      <div class="info-row"><span class="info-key">ap ip</span>     <span class="info-val" id="d-apip">—</span></div>
+      <div class="info-row"><span class="info-key">ap ssid</span>   <span class="info-val">modular</span></div>
+      <div class="info-row"><span class="info-key">hostname</span>  <span class="info-val">modular.local</span></div>
+      <div class="info-row"><span class="info-key">wifi</span>      <span class="info-val" id="d-wifi">—</span></div>
+      <div class="info-row"><span class="info-key">uptime</span>    <span class="info-val" id="d-uptime">—</span></div>
+      <div class="info-row"><span class="info-key">free heap</span> <span class="info-val" id="d-heap">—</span></div>
+    </div>
+    <button type="button" class="secondary" onclick="loadStatus()">refresh</button>
+  </div>
+
+</div>
+<script>
+(function () {
+
+window.switchTab = function(btn, name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+};
+
+window.togglePass = function() {
+  const inp = document.getElementById('pass');
+  const b   = document.getElementById('eye-btn');
+  inp.type  = inp.type === 'password' ? 'text' : 'password';
+  b.textContent = inp.type === 'password' ? 'show' : 'hide';
+};
+
+async function loadConfig() {
+  try {
+    const j = await (await fetch('/config')).json();
+    if (j.ssid)   document.getElementById('ssid').value   = j.ssid;
+    if (j.city)   document.getElementById('city').value   = j.city;
+    if (j.owmkey) document.getElementById('owmkey').value = j.owmkey;
+
+    const dot = document.getElementById('wifi-dot');
+    const lbl = document.getElementById('wifi-label');
+    if (j.connected) {
+      dot.classList.add('on');
+      lbl.textContent = j.ip || 'connected';
+      document.getElementById('d-ip').textContent  = j.ip || '—';
+      document.getElementById('d-wifi').textContent = 'connected';
+      document.getElementById('d-wifi').className  = 'info-val ok';
+    } else {
+      lbl.textContent = 'ap only';
+      document.getElementById('d-wifi').textContent = 'not connected';
+      document.getElementById('d-wifi').className  = 'info-val err';
+    }
+  } catch {}
+}
+
+window.loadStatus = async function() {
+  try {
+    const j = await (await fetch('/status')).json();
+    if (j.uptime   !== undefined) document.getElementById('d-uptime').textContent = fmtUp(j.uptime);
+    if (j.freeHeap !== undefined) document.getElementById('d-heap').textContent   = (j.freeHeap/1024).toFixed(1) + ' KB';
+    if (j.apIP)                   document.getElementById('d-apip').textContent   = j.apIP;
+  } catch {}
+};
+
+function fmtUp(ms) {
+  const s = Math.floor(ms/1000), m = Math.floor(s/60), h = Math.floor(m/60);
+  return h ? h+'h '+(m%60)+'m' : m ? m+'m '+(s%60)+'s' : s+'s';
+}
+
+const form  = document.getElementById('form');
+const btn   = document.getElementById('btn');
+const btext = document.getElementById('btn-text');
+const msg   = document.getElementById('msg');
+
+form.addEventListener('submit', async e => { e.preventDefault(); await doSave(true); });
+window.saveOnly = () => doSave(false);
+
+async function doSave(restart) {
+  const ssid   = document.getElementById('ssid').value.trim();
+  const pass   = document.getElementById('pass').value;
+  const city   = document.getElementById('city').value.trim();
+  const owmkey = document.getElementById('owmkey').value.trim();
+
+  if (!ssid) { flash('wi-fi ssid is required', 'err'); return; }
+  if (!city) { flash('city is required', 'err'); return; }
+
+  btn.disabled = true;
+  btext.textContent = 'saving...';
+  msg.className = ''; msg.textContent = '';
+
+  try {
+    const body = new URLSearchParams({ ssid, pass, city, owmkey, restart: restart ? '1' : '0' });
+    const j    = await (await fetch('/save', { method: 'POST', body })).json();
+    if (!j.ok) throw 0;
+    flash(restart ? 'saved! restarting... ✦' : 'ദ്ദി(˵ •̀ ᴗ - ˵ ) ✧', 'ok');
+    btext.textContent = restart ? 'restarting' : 'save & restart';
+    if (!restart) btn.disabled = false;
+  } catch {
+    flash('(╥﹏╥) failed', 'err');
+    btn.disabled = false;
+    btext.textContent = 'save & restart';
+  }
+}
+
+function flash(t, c) { msg.textContent = t; msg.className = c; }
+
+loadConfig();
+loadStatus();
+
+})();
+</script>
+</body>
+</html>
