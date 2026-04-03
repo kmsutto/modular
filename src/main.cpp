@@ -20,23 +20,13 @@ WebServer        server(80);
 WiFiUDP          ntpUDP;
 NTPClient        timeClient(ntpUDP, NTP_SERVER, NTP_OFFSET, NTP_INTERVAL);
 
-enum class AppMode     { CLOCK, EDITOR };
-enum class EditorWidget { CLOCK, DATE, WEATHER };
-
-AppMode      appMode          = AppMode::CLOCK;
-EditorWidget editorSel        = EditorWidget::CLOCK;
-bool         editorMoving     = false;
-
-unsigned long lastWeatherMs   = 0;
-unsigned long lastClockMs     = 0;
-unsigned long lastFadeMs      = 0;
-unsigned long btnPressMs      = 0;
-bool          btnHeld         = false;
-bool          longPressExecuted = false;
+unsigned long lastWeatherMs = 0;
+unsigned long lastClockMs   = 0;
+unsigned long lastFadeMs    = 0;
 
 String cachedTime;
 String cachedDate;
-String cachedTemp = "0C";
+String cachedTemp = "0";
 
 static String readFile(const char *path) {
     File f = SPIFFS.open(path, "r");
@@ -46,7 +36,6 @@ static String readFile(const char *path) {
     return s;
 }
 
-// -- time & data settings
 static void buildTimeDate() {
     timeClient.update();
     int h = timeClient.getHours();
@@ -66,7 +55,6 @@ static void buildTimeDate() {
     cachedDate = String(dbuf);
 }
 
-// -- weather settings
 static void fetchWeather() {
     if (settings.data.owmApiKey.isEmpty()) return;
     HTTPClient http;
@@ -83,109 +71,49 @@ static void fetchWeather() {
     http.end();
 }
 
-// -- draw it all
+static void drawOnboarding() {
+    display.clearDisplay();
+    display.setTextColor(SSD1306_WHITE);
+
+    display.setTextSize(1);
+    display.setCursor(0, 0);
+    display.print("[ modular ]");
+
+    display.drawFastHLine(0, 10, SCREEN_WIDTH, SSD1306_WHITE);
+
+    display.setTextSize(1);
+    display.setCursor(0, 14);
+    display.print("wi-fi: modular");
+
+    display.setCursor(0, 26);
+    display.print("open browser:");
+
+    display.setCursor(0, 36);
+    display.setTextColor(SSD1306_WHITE);
+    display.print("modular.local");
+
+    static bool blink = false;
+    static unsigned long lastBlink = 0;
+    if (millis() - lastBlink > 600) { blink = !blink; lastBlink = millis(); }
+    if (blink) display.fillCircle(SCREEN_WIDTH - 4, SCREEN_HEIGHT - 4, 2, SSD1306_WHITE);
+
+    display.display();
+}
+
 static void drawMain() {
     display.clearDisplay();
-    widgetDrawClock(settings.data.widgetClockX, settings.data.widgetClockY, cachedTime);
-    widgetDrawDate(settings.data.widgetDateX, settings.data.widgetDateY, cachedDate);
-    widgetDrawWeather(settings.data.widgetWeatherX, settings.data.widgetWeatherY);
+    if (settings.data.widgetClockVisible)
+        widgetDrawClock(settings.data.widgetClockX, settings.data.widgetClockY,
+                        cachedTime, settings.data.widgetClockSize);
+    if (settings.data.widgetDateVisible)
+        widgetDrawDate(settings.data.widgetDateX, settings.data.widgetDateY,
+                       cachedDate, settings.data.widgetDateSize);
+    if (settings.data.widgetWeatherVisible)
+        widgetDrawWeather(settings.data.widgetWeatherX, settings.data.widgetWeatherY,
+                          settings.data.widgetWeatherSize);
     display.display();
 }
 
-// -- editor
-static void drawEditor() {
-    display.clearDisplay();
-
-    widgetDrawClock(settings.data.widgetClockX, settings.data.widgetClockY, cachedTime);
-    widgetDrawDate(settings.data.widgetDateX, settings.data.widgetDateY, cachedDate);
-    widgetDrawWeather(settings.data.widgetWeatherX, settings.data.widgetWeatherY);
-
-    int16_t x1, y1;
-    uint16_t tw, th;
-    int bx, by, bw, bh;
-
-    switch (editorSel) {
-        case EditorWidget::CLOCK:
-            display.setTextSize(3);
-            display.getTextBounds(cachedTime, settings.data.widgetClockX, settings.data.widgetClockY, &x1, &y1, &tw, &th);
-            bx = x1 - 4; by = y1 - 4; bw = tw + 8; bh = th + 8;
-            break;
-        case EditorWidget::DATE:
-            display.setTextSize(1);
-            display.getTextBounds(cachedDate, settings.data.widgetDateX, settings.data.widgetDateY, &x1, &y1, &tw, &th);
-            bx = x1 - 3; by = y1 - 3; bw = tw + 6; bh = th + 6;
-            break;
-        default:
-            display.setTextSize(1);
-            display.getTextBounds(cachedTemp, settings.data.widgetWeatherX + 18, settings.data.widgetWeatherY + 4, &x1, &y1, &tw, &th);
-            bx = settings.data.widgetWeatherX - 2;
-            by = settings.data.widgetWeatherY - 2;
-            bw = (x1 + tw) - bx + 2;
-            bh = 16 + 4;
-            break;
-    }
-
-    display.drawRoundRect(bx, by, bw, bh, 3, SSD1306_WHITE);
-    display.display();
-}
-
-// -- joy preferences
-static void handleJoystick() {
-    int jx = analogRead(JOY_X_PIN) - JOY_CENTER;
-    int jy = analogRead(JOY_Y_PIN) - JOY_CENTER;
-    bool pressed = (digitalRead(JOY_BTN_PIN) == LOW);
-    unsigned long now = millis();
-
-    if (pressed) {
-        if (!btnHeld) {
-            btnPressMs = now;
-            btnHeld = true;
-            longPressExecuted = false;
-        } else if (!longPressExecuted && (now - btnPressMs >= JOY_LONG_PRESS_MS)) {
-            if (appMode == AppMode::CLOCK) {
-                appMode = AppMode::EDITOR;
-                editorSel = EditorWidget::CLOCK;
-                editorMoving = false;
-            } else if (appMode == AppMode::EDITOR) {
-                settings.save();
-                appMode = AppMode::CLOCK;
-            }
-            longPressExecuted = true;
-        }
-    } else {
-        if (btnHeld) {
-            if (!longPressExecuted && appMode == AppMode::EDITOR) {
-                editorMoving = !editorMoving;
-            }
-            btnHeld = false;
-        }
-    }
-
-    if (appMode != AppMode::EDITOR) return;
-
-    static unsigned long lastMove = 0;
-    if (now - lastMove < 120) return;
-    bool moved = false;
-
-    if (!editorMoving) {
-        if (abs(jy) > JOY_DEAD_ZONE) {
-            int step = (jy > 0) ? 1 : 2;
-            editorSel = (EditorWidget)(((int)editorSel + step) % 3);
-            moved = true;
-        }
-    } else {
-        int *wx = nullptr, *wy = nullptr;
-        if      (editorSel == EditorWidget::CLOCK)   { wx = &settings.data.widgetClockX;   wy = &settings.data.widgetClockY; }
-        else if (editorSel == EditorWidget::DATE)    { wx = &settings.data.widgetDateX;    wy = &settings.data.widgetDateY; }
-        else                                          { wx = &settings.data.widgetWeatherX; wy = &settings.data.widgetWeatherY; }
-
-        if (abs(jx) > JOY_DEAD_ZONE) { *wx = constrain(*wx + (jx > 0 ? 2 : -2), 0, SCREEN_WIDTH  - 20); moved = true; }
-        if (abs(jy) > JOY_DEAD_ZONE) { *wy = constrain(*wy + (jy > 0 ? 2 : -2), 0, SCREEN_HEIGHT - 10); moved = true; }
-    }
-    if (moved) lastMove = now;
-}
-
-// -- web server
 static void setupWebServer() {
     server.on("/", HTTP_GET, []() {
         String html = readFile("/index.html");
@@ -194,20 +122,34 @@ static void setupWebServer() {
 
     server.on("/config", HTTP_GET, []() {
         JsonDocument doc;
-        doc["ssid"]           = settings.data.wifiSSID;
-        doc["city"]           = settings.data.city;
-        doc["owmkey"]         = settings.data.owmApiKey;
-        doc["connected"]      = (WiFi.status() == WL_CONNECTED);
-        doc["ip"]             = (WiFi.status() == WL_CONNECTED) ? WiFi.localIP().toString() : "";
-        // doc["clockX"]         = settings.data.widgetClockX;
-        // doc["clockY"]         = settings.data.widgetClockY;
-        // doc["dateX"]          = settings.data.widgetDateX;
-        // doc["dateY"]          = settings.data.widgetDateY;
-        // doc["weatherX"]       = settings.data.widgetWeatherX;
-        // doc["weatherY"]       = settings.data.widgetWeatherY;
-        // doc["cachedTime"]     = cachedTime;
-        // doc["cachedDate"]     = cachedDate;
-        // doc["cachedTemp"]     = cachedTemp;
+        bool configured = settings.isConfigured();
+        doc["configured"] = configured;
+        doc["ssid"]       = settings.data.wifiSSID;
+        doc["city"]       = settings.data.city;
+        doc["owmkey"]     = settings.data.owmApiKey;
+        doc["connected"]  = (WiFi.status() == WL_CONNECTED);
+        doc["ip"]         = (WiFi.status() == WL_CONNECTED) ? WiFi.localIP().toString() : "";
+
+        doc["clockX"]    = settings.data.widgetClockX;
+        doc["clockY"]    = settings.data.widgetClockY;
+        doc["clockSize"] = settings.data.widgetClockSize;
+        doc["clockVis"]  = settings.data.widgetClockVisible ? 1 : 0;
+
+        doc["dateX"]     = settings.data.widgetDateX;
+        doc["dateY"]     = settings.data.widgetDateY;
+        doc["dateSize"]  = settings.data.widgetDateSize;
+        doc["dateVis"]   = settings.data.widgetDateVisible ? 1 : 0;
+
+        doc["weatherX"]    = settings.data.widgetWeatherX;
+        doc["weatherY"]    = settings.data.widgetWeatherY;
+        doc["weatherSize"] = settings.data.widgetWeatherSize;
+        doc["weatherVis"]  = settings.data.widgetWeatherVisible ? 1 : 0;
+
+        doc["cachedTime"] = cachedTime;
+        doc["cachedDate"] = cachedDate;
+        doc["cachedTemp"] = cachedTemp;
+        doc["brightness"] = settings.data.brightness;
+
         String out;
         serializeJson(doc, out);
         server.send(200, "application/json", out);
@@ -227,29 +169,54 @@ static void setupWebServer() {
     });
 
     server.on("/save", HTTP_POST, []() {
-        if (server.hasArg("ssid"))   settings.data.wifiSSID      = server.arg("ssid");
+        if (server.hasArg("ssid"))   settings.data.wifiSSID     = server.arg("ssid");
         if (server.hasArg("pass") && !server.arg("pass").isEmpty())
-                                     settings.data.wifiPassword  = server.arg("pass");
-        if (server.hasArg("owmkey")) settings.data.owmApiKey     = server.arg("owmkey");
-        if (server.hasArg("city"))   settings.data.city          = server.arg("city");
+                                     settings.data.wifiPassword = server.arg("pass");
+        if (server.hasArg("owmkey")) settings.data.owmApiKey    = server.arg("owmkey");
+        if (server.hasArg("city"))   settings.data.city         = server.arg("city");
         settings.save();
         server.send(200, "application/json", "{\"ok\":true}");
 
         bool restart = server.hasArg("restart") && server.arg("restart") == "1";
-        if (restart) {
-            delay(400);
-            ESP.restart();
+        if (restart) { delay(400); ESP.restart(); }
+    });
+
+    server.on("/brightness", HTTP_POST, []() {
+        if (server.hasArg("value")) {
+            int v = constrain(server.arg("value").toInt(), 0, 255);
+            settings.data.brightness = v;
+            settings.save();
+            display.ssd1306_command(SSD1306_SETCONTRAST);
+            display.ssd1306_command(v);
         }
+        server.send(200, "application/json", "{\"ok\":true}");
+    });
+
+    server.on("/layout", HTTP_POST, []() {
+        if (server.hasArg("clockX"))    settings.data.widgetClockX       = server.arg("clockX").toInt();
+        if (server.hasArg("clockY"))    settings.data.widgetClockY       = server.arg("clockY").toInt();
+        if (server.hasArg("clockSize")) settings.data.widgetClockSize    = constrain(server.arg("clockSize").toInt(), 1, 4);
+        if (server.hasArg("clockVis"))  settings.data.widgetClockVisible = server.arg("clockVis") == "1";
+
+        if (server.hasArg("dateX"))     settings.data.widgetDateX        = server.arg("dateX").toInt();
+        if (server.hasArg("dateY"))     settings.data.widgetDateY        = server.arg("dateY").toInt();
+        if (server.hasArg("dateSize"))  settings.data.widgetDateSize     = constrain(server.arg("dateSize").toInt(), 1, 4);
+        if (server.hasArg("dateVis"))   settings.data.widgetDateVisible  = server.arg("dateVis") == "1";
+
+        if (server.hasArg("weatherX"))    settings.data.widgetWeatherX       = server.arg("weatherX").toInt();
+        if (server.hasArg("weatherY"))    settings.data.widgetWeatherY       = server.arg("weatherY").toInt();
+        if (server.hasArg("weatherSize")) settings.data.widgetWeatherSize    = constrain(server.arg("weatherSize").toInt(), 1, 4);
+        if (server.hasArg("weatherVis"))  settings.data.widgetWeatherVisible = server.arg("weatherVis") == "1";
+
+        settings.save();
+        server.send(200, "application/json", "{\"ok\":true}");
     });
 
     server.begin();
 }
 
-// -- main
 void setup() {
     Wire.begin();
-    
-    pinMode(JOY_BTN_PIN, INPUT_PULLUP);
 
     display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDRESS);
     display.clearDisplay();
@@ -259,10 +226,13 @@ void setup() {
     SPIFFS.begin(true);
     settings.load();
 
+    display.ssd1306_command(SSD1306_SETCONTRAST);
+    display.ssd1306_command(settings.data.brightness);
+
     WiFi.mode(WIFI_AP_STA);
     WiFi.softAP(AP_SSID);
     MDNS.begin(MDNS_NAME);
-    
+
     setupWebServer();
 
     if (settings.isConfigured()) {
@@ -278,18 +248,25 @@ void setup() {
     }
 
     lastWeatherMs = lastClockMs = lastFadeMs = millis();
+
+    if (!settings.isConfigured()) {
+        drawOnboarding();
+    }
 }
 
 void loop() {
     server.handleClient();
 
+    if (!settings.isConfigured()) {
+        drawOnboarding();
+        return;
+    }
+
     unsigned long now = millis();
-    handleJoystick();
 
-    if (now - lastFadeMs    > 40)              { widgetUpdateWeatherFade(); lastFadeMs    = now; }
-    if (now - lastClockMs   > CLOCK_UPDATE_MS) { buildTimeDate();           lastClockMs   = now; }
-    if (now - lastWeatherMs > WEATHER_UPDATE_MS) { fetchWeather();          lastWeatherMs = now; }
+    if (now - lastFadeMs    > 40)               { widgetUpdateWeatherFade(); lastFadeMs    = now; }
+    if (now - lastClockMs   > CLOCK_UPDATE_MS)  { buildTimeDate();           lastClockMs   = now; }
+    if (now - lastWeatherMs > WEATHER_UPDATE_MS){ fetchWeather();            lastWeatherMs = now; }
 
-    if (appMode == AppMode::EDITOR) drawEditor();
-    else                            drawMain();
+    drawMain();
 }
