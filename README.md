@@ -2,7 +2,7 @@
 **modular** is an open-source firmware for ESP32 which turns your device into a mini desktop clock with the weather and much more. 
 also, you can always send a pull request, we are open to this and will only be glad
 
-to connect all the modules (screen, joystick) correctly, read the **[wire-guide.md](media/wire-guide.md)** instructions to connect everything correctly
+to connect all the modules (screen, esp32) correctly, read the **[wire-guide.md](media/wire-guide.md)** instructions to connect everything correctly
 
 ---
 
@@ -33,5 +33,8 @@ to connect all the modules (screen, joystick) correctly, read the **[wire-guide.
 # build firmware
 pio run
 
-# upload to ESP32
+# upload filesystem
+pio run --target uploadfs
+
+# upload to esp32
 pio run --target upload
