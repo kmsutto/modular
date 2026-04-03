@@ -4,7 +4,6 @@ this guide explains how to connect an **esp32**, a **0.96" oled (ssd1306)**, and
 ## components Required
 * **esp32 devkit v1** (30-pin version)
 * **oled display** (0.96 inch, ssd1306, i2c interface)
-* **analog joystick** (with integrated push button)
 * **2x mini breadboards**
 * **jumper wires** (male-to-male and male-to-female)
 
@@ -30,20 +29,7 @@ the oled uses the **i2c protocol**, which requires only 4 wires. connect them as
 
 <img width="900" height="700" alt="3" src="https://github.com/user-attachments/assets/1cc69fa0-59c2-4147-b2fc-dbfb056ac9ec" />
 
-## step 3: wiring the analog joystick [OPTIONAL]
-the joystick provides analog values for x/y movement and a digital signal for the button press.
-
-| joystick pin | esp32 pin | function |
-| :--- | :--- | :--- |
-| **gnd** | **gnd** | ground |
-| **+5v** | **3v3** | power |
-| **vrx** | **d34** | x-axis |
-| **vry** | **d35** | y-axis |
-| **sw** | **d32** | button click |
-
-<img width="900" height="700" alt="4" src="https://github.com/user-attachments/assets/8d263308-cd3e-48fd-b4bf-5439ca0ff6e2" />
-
-## step 4: you are beautiful!
+## step 3: you are beautiful!
 now you can put it on the shelf, connected type-c, on the table, anywhere. all you have to do is compile the firmware and flash it! 
 
 ---
