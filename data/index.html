@@ -2,163 +2,248 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>modular</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&display=swap');
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-:root {
-  --bg:   #0c0e0b;
-  --fg:   #e8e8e4;
-  --dim:  #4a4a46;
-  --dim2: #6a6a66;
-  --line: #1e1e1a;
-  --acc:  #9d9d9d;
-  --err:  #ffbaba;
-  --ok:   #b8ffd3;
-  --r:    3px;
+:root{
+  --bg:#0c0e0b;--fg:#e8e8e4;--dim:#4a4a46;--dim2:#6a6a66;
+  --line:#1e1e1a;--acc:#9d9d9d;--err:#ffbaba;--ok:#b8ffd3;--r:3px;
 }
 
-html, body {
-  background: var(--bg);
-  color: var(--fg);
-  font-family: 'IBM Plex Mono', monospace;
-  min-height: 100dvh;
+html,body{background:var(--bg);color:var(--fg);font-family:'IBM Plex Mono',monospace;min-height:100dvh;overflow-x:hidden}
+
+#screen-onboarding{
+  display:none;min-height:100dvh;
+  flex-direction:column;justify-content:center;align-items:center;
+  padding:48px 24px;
+}
+#screen-onboarding.active{display:flex}
+
+.ob-logo{font-size:11px;font-weight:500;letter-spacing:.18em;color:var(--acc);margin-bottom:48px}
+.ob-title{font-size:18px;font-weight:300;color:var(--fg);margin-bottom:8px;letter-spacing:.04em}
+.ob-sub{font-size:10px;color:var(--dim2);letter-spacing:.1em;margin-bottom:44px;text-align:center;line-height:1.8}
+.ob-form{width:100%;max-width:360px}
+.ob-step{font-size:9px;letter-spacing:.15em;color:var(--dim);text-transform:uppercase;margin-bottom:32px;display:flex;gap:8px;align-items:center}
+.ob-step-dot{width:4px;height:4px;border-radius:50%;background:var(--dim)}
+.ob-step-dot.active{background:var(--acc)}
+
+#screen-app{display:none}
+#screen-app.active{display:block}
+
+.wrap{max-width:480px;margin:0 auto;padding:40px 20px 80px}
+
+header{margin-bottom:36px;display:flex;justify-content:space-between;align-items:center}
+.logo{font-size:11px;font-weight:500;letter-spacing:.12em;color:var(--acc)}
+.status-badge{font-size:9px;letter-spacing:.08em;color:var(--dim2);display:flex;align-items:center;gap:6px}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--dim);flex-shrink:0}
+.dot.on{background:var(--ok);box-shadow:0 0 5px var(--ok)}
+
+.tabs{display:flex;border-bottom:1px solid var(--line);margin-bottom:28px}
+.tab{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);background:none;border:none;border-bottom:2px solid transparent;padding:10px 14px;cursor:pointer;margin-bottom:-1px;transition:color .15s,border-color .15s;-webkit-tap-highlight-color:transparent}
+.tab:hover{color:var(--fg)}
+.tab.active{color:var(--acc);border-bottom-color:var(--acc)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+.group{margin-bottom:24px}
+label{display:flex;justify-content:space-between;align-items:baseline;font-size:9px;font-weight:500;letter-spacing:.2em;color:var(--dim);text-transform:uppercase;margin-bottom:8px}
+label a{font-size:9px;color:var(--dim);text-decoration:none;letter-spacing:.05em;transition:color .15s;text-transform:none}
+label a:hover{color:var(--fg)}
+input{width:100%;background:transparent;border:none;border-bottom:1px solid var(--line);padding:10px 0;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:300;color:var(--fg);outline:none;transition:border-color .2s;border-radius:0;appearance:none}
+input::placeholder{color:var(--dim)}
+input:focus{border-bottom-color:var(--acc)}
+.pass-wrap{position:relative}
+.pass-wrap input{padding-right:40px}
+.eye-btn{position:absolute;right:0;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--dim);font-size:9px;letter-spacing:.05em;cursor:pointer;padding:6px;transition:color .15s;-webkit-tap-highlight-color:transparent}
+.eye-btn:hover{color:var(--fg)}
+
+button.primary{margin-top:8px;width:100%;padding:14px;background:var(--acc);color:#0a0a0a;border:none;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.25em;text-transform:uppercase;border-radius:var(--r);cursor:pointer;transition:opacity .15s,transform .1s;-webkit-tap-highlight-color:transparent}
+button.primary:hover{opacity:.88}
+button.primary:active{transform:scale(.98)}
+button.primary:disabled{opacity:.35;cursor:not-allowed}
+button.secondary{width:100%;padding:12px;background:transparent;color:var(--dim2);border:1px solid var(--line);font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:400;letter-spacing:.15em;text-transform:uppercase;border-radius:var(--r);cursor:pointer;transition:border-color .15s,color .15s;margin-top:8px;-webkit-tap-highlight-color:transparent}
+button.secondary:hover{border-color:var(--dim2);color:var(--fg)}
+
+#ob-msg,#msg{margin-top:14px;font-size:10px;letter-spacing:.08em;min-height:18px;text-align:center}
+#ob-msg.ok,#msg.ok{color:var(--ok)}
+#ob-msg.err,#msg.err{color:var(--err)}
+
+.info-grid{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:16px}
+.info-row{display:flex;justify-content:space-between;align-items:center;background:var(--bg);padding:11px 14px;gap:12px}
+.info-key{font-size:9px;letter-spacing:.15em;color:var(--dim);text-transform:uppercase;flex-shrink:0}
+.info-val{font-size:11px;color:var(--fg);font-weight:300;text-align:right;word-break:break-all}
+.info-val.acc{color:var(--acc)}
+.info-val.ok{color:var(--ok)}
+.info-val.err{color:var(--err)}
+
+.editor-section{margin-bottom:28px}
+.editor-label{font-size:9px;font-weight:500;letter-spacing:.2em;color:var(--dim);text-transform:uppercase;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.editor-hint{font-size:8px;color:var(--dim);letter-spacing:.05em;text-transform:none;font-weight:300}
+
+.display-wrapper{
+  display:flex;justify-content:center;
+  overflow-x:auto;padding-bottom:4px;margin-bottom:20px;
 }
 
-.wrap {
-  max-width: 420px;
-  margin: 0 auto;
-  padding: 48px 20px 80px;
+.display-outer{
+  position:relative;
+  border:1px solid #2a2a28;border-radius:6px;padding:8px;
+  background:#090908;
+  box-shadow:0 0 0 1px #191917,0 6px 32px rgba(0,0,0,.7);
+  flex-shrink:0;
 }
 
-header {
-  margin-bottom: 44px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.display-canvas{
+  position:relative;
+  width:384px;height:192px;
+  background:#000;
+  border-radius:2px;
+  overflow:hidden;
+  touch-action:none;
+  user-select:none;
+  background-image:repeating-linear-gradient(
+    0deg,transparent,transparent 2px,rgba(0,0,0,.2) 3px
+  );
+}
+.display-canvas::after{
+  content:'';position:absolute;inset:0;pointer-events:none;z-index:20;
+  box-shadow:inset 0 0 24px rgba(80,255,140,.03);
+  border-radius:2px;
 }
 
-.logo { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; color: var(--acc); }
-
-.status-badge {
-  font-size: 9px; letter-spacing: 0.08em; color: var(--dim2);
-  display: flex; align-items: center; gap: 6px;
+.w{
+  position:absolute;cursor:grab;
+  touch-action:none;user-select:none;
+  transform-origin:left top;z-index:5;
+  -webkit-tap-highlight-color:transparent;
+  font-family:'IBM Plex Mono',monospace;
+  color:#dfffea;line-height:1;white-space:nowrap;
+  text-shadow:0 0 5px rgba(160,255,200,.3);
 }
+.w:active{cursor:grabbing;z-index:15}
+.w.selected{outline:1px dashed rgba(180,255,200,.4);outline-offset:3px}
+.w-clock{ font-weight:500;letter-spacing:.04em }
+.w-date { font-weight:300;letter-spacing:.02em }
+.w-weather{font-weight:300;display:flex;align-items:center;gap:2px;letter-spacing:.02em}
 
-.dot { width: 5px; height: 5px; border-radius: 50%; background: var(--dim); flex-shrink: 0; }
-.dot.on { background: var(--ok); box-shadow: 0 0 5px var(--ok); }
+.widget-list{display:flex;flex-direction:column;gap:8px}
+.widget-row{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;
+  background:rgba(255,255,255,.025);
+  border:1px solid var(--line);border-radius:var(--r);
+  cursor:pointer;transition:border-color .15s;
+}
+.widget-row:hover{border-color:var(--dim)}
+.widget-row.selected-row{border-color:var(--acc)}
+.widget-name{font-size:10px;letter-spacing:.1em;color:var(--fg);flex:1;text-transform:uppercase}
+.widget-coords{font-size:9px;color:var(--dim);letter-spacing:.04em;min-width:64px}
+.size-controls{display:flex;align-items:center;gap:4px}
+.sz-btn{
+  background:none;border:1px solid var(--line);color:var(--dim);
+  font-family:'IBM Plex Mono',monospace;font-size:11px;
+  width:22px;height:22px;border-radius:2px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:border-color .15s,color .15s;padding:0;flex-shrink:0;
+  -webkit-tap-highlight-color:transparent;
+}
+.sz-btn:hover{border-color:var(--acc);color:var(--fg)}
+.sz-val{font-size:9px;color:var(--acc);min-width:12px;text-align:center}
+.vis-btn{
+  background:none;border:1px solid var(--line);color:var(--dim);
+  font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.05em;
+  padding:4px 7px;border-radius:2px;cursor:pointer;
+  transition:border-color .15s,color .15s;white-space:nowrap;flex-shrink:0;
+  -webkit-tap-highlight-color:transparent;
+}
+.vis-btn:hover{border-color:var(--acc);color:var(--fg)}
+.vis-btn.hidden-btn{color:var(--err);border-color:rgba(255,186,186,.3)}
 
-.tabs {
-  display: flex;
-  border-bottom: 1px solid var(--line);
-  margin-bottom: 28px;
-}
+.save-row{display:flex;gap:8px;margin-top:4px}
+.save-row button{margin-top:0}
+#layout-msg{margin-top:10px;font-size:10px;letter-spacing:.08em;min-height:18px;text-align:center}
+#layout-msg.ok{color:var(--ok)}
+#layout-msg.err{color:var(--err)}
 
-.tab {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 9px; font-weight: 500; letter-spacing: 0.18em;
-  text-transform: uppercase; color: var(--dim);
-  background: none; border: none; border-bottom: 2px solid transparent;
-  padding: 10px 14px; cursor: pointer; margin-bottom: -1px;
-  transition: color 0.15s, border-color 0.15s;
-  width: auto; transform: none; opacity: 1;
-  -webkit-tap-highlight-color: transparent;
+.brightness-row{
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:20px;
 }
-.tab:hover { color: var(--fg); }
-.tab.active { color: var(--acc); border-bottom-color: var(--acc); }
-
-.tab-panel { display: none; }
-.tab-panel.active { display: block; }
-
-.group { margin-bottom: 24px; }
-
-label {
-  display: flex; justify-content: space-between; align-items: baseline;
-  font-size: 9px; font-weight: 500; letter-spacing: 0.2em;
-  color: var(--dim); text-transform: uppercase; margin-bottom: 8px;
+.brightness-label{
+  font-size:9px;font-weight:500;letter-spacing:.2em;color:var(--dim);
+  text-transform:uppercase;white-space:nowrap;
 }
-label a {
-  font-size: 9px; color: var(--dim); text-decoration: none;
-  letter-spacing: 0.05em; transition: color 0.15s; text-transform: none;
+.brightness-val{
+  font-size:10px;color:var(--acc);letter-spacing:.05em;
+  min-width:28px;text-align:right;flex-shrink:0;
 }
-label a:hover { color: var(--fg); }
-
-input {
-  width: 100%; background: transparent; border: none;
-  border-bottom: 1px solid var(--line); padding: 10px 0;
-  font-family: 'IBM Plex Mono', monospace; font-size: 14px;
-  font-weight: 300; color: var(--fg); outline: none;
-  transition: border-color 0.2s; border-radius: 0;
-  appearance: none;
+input[type=range]{
+  -webkit-appearance:none;appearance:none;
+  flex:1;height:2px;background:var(--line);border-radius:1px;outline:none;
+  border:none;padding:0;cursor:pointer;
 }
-input::placeholder { color: var(--dim); }
-input:focus { border-bottom-color: var(--acc); }
-
-.pass-wrap { position: relative; }
-.pass-wrap input { padding-right: 40px; }
-.eye-btn {
-  position: absolute; right: 0; top: 50%; transform: translateY(-50%);
-  background: none; border: none; color: var(--dim); font-size: 9px;
-  letter-spacing: 0.05em; cursor: pointer; padding: 6px;
-  width: auto; margin: 0; opacity: 1; transition: color 0.15s;
-  -webkit-tap-highlight-color: transparent;
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:14px;height:14px;border-radius:50%;
+  background:var(--acc);cursor:pointer;
+  transition:transform .1s;
 }
-.eye-btn:hover { color: var(--fg); opacity: 1; transform: translateY(-50%); }
-
-button.primary {
-  margin-top: 8px; width: 100%; padding: 14px;
-  background: var(--acc); color: #0a0a0a; border: none;
-  font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 500;
-  letter-spacing: 0.25em; text-transform: uppercase;
-  border-radius: var(--r); cursor: pointer;
-  transition: opacity 0.15s, transform 0.1s;
-  -webkit-tap-highlight-color: transparent;
+input[type=range]::-webkit-slider-thumb:active{transform:scale(1.25)}
+input[type=range]::-moz-range-thumb{
+  width:14px;height:14px;border-radius:50%;border:none;
+  background:var(--acc);cursor:pointer;
 }
-button.primary:hover { opacity: 0.88; }
-button.primary:active { transform: scale(0.98); }
-button.primary:disabled { opacity: 0.35; cursor: not-allowed; }
-
-button.secondary {
-  width: 100%; padding: 12px; background: transparent;
-  color: var(--dim2); border: 1px solid var(--line);
-  font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 400;
-  letter-spacing: 0.15em; text-transform: uppercase;
-  border-radius: var(--r); cursor: pointer;
-  transition: border-color 0.15s, color 0.15s; margin-top: 8px;
-  -webkit-tap-highlight-color: transparent;
-}
-button.secondary:hover { border-color: var(--dim2); color: var(--fg); }
-
-#msg {
-  margin-top: 14px; font-size: 10px; letter-spacing: 0.08em;
-  min-height: 18px; text-align: center;
-}
-#msg.ok  { color: var(--ok); }
-#msg.err { color: var(--err); }
-
-.info-grid {
-  display: grid; gap: 1px; background: var(--line);
-  border: 1px solid var(--line); border-radius: var(--r);
-  overflow: hidden; margin-bottom: 16px;
-}
-.info-row {
-  display: flex; justify-content: space-between; align-items: center;
-  background: var(--bg); padding: 11px 14px; gap: 12px;
-}
-.info-key {
-  font-size: 9px; letter-spacing: 0.15em; color: var(--dim);
-  text-transform: uppercase; flex-shrink: 0;
-}
-.info-val { font-size: 11px; color: var(--fg); font-weight: 300; text-align: right; word-break: break-all; }
-.info-val.acc { color: var(--acc); }
-.info-val.ok  { color: var(--ok); }
-.info-val.err { color: var(--err); }
 </style>
 </head>
 <body>
+
+<div id="screen-onboarding">
+  <div class="ob-logo">modular</div>
+  <div class="ob-title">welcome</div>
+  <p class="ob-sub">connect to your wi-fi<br>and set up weather to get started</p>
+
+  <div class="ob-form">
+    <div class="ob-step">
+      <span class="ob-step-dot active"></span>
+      <span class="ob-step-dot"></span>
+      <span style="margin-left:4px;font-size:9px;letter-spacing:.1em">initial setup</span>
+    </div>
+
+    <div class="group">
+      <label for="ob-ssid">wi-fi network</label>
+      <input id="ob-ssid" type="text" autocomplete="off" spellcheck="false" placeholder="ssid">
+    </div>
+    <div class="group">
+      <label for="ob-pass">password</label>
+      <div class="pass-wrap">
+        <input id="ob-pass" type="password" autocomplete="off" placeholder="••••••">
+        <button type="button" class="eye-btn" onclick="toggleObPass()">show</button>
+      </div>
+    </div>
+    <div class="group">
+      <label for="ob-city">city</label>
+      <input id="ob-city" type="text" placeholder="kyiv">
+    </div>
+    <div class="group">
+      <label for="ob-owmkey">
+        owm api key
+        <a href="https://openweathermap.org/api" target="_blank" rel="noopener">get ↗</a>
+      </label>
+      <input id="ob-owmkey" type="text" autocomplete="off" spellcheck="false" placeholder="optional">
+    </div>
+
+    <button class="primary" id="ob-btn" onclick="obSave()">
+      <span id="ob-btn-text">save &amp; restart</span>
+    </button>
+    <div id="ob-msg"></div>
+  </div>
+</div>
+
+<div id="screen-app">
 <div class="wrap">
 
   <header>
@@ -170,11 +255,99 @@ button.secondary:hover { border-color: var(--dim2); color: var(--fg); }
   </header>
 
   <div class="tabs">
-    <button class="tab active" onclick="switchTab(this,'settings')">settings</button>
+    <button class="tab active" onclick="switchTab(this,'layout')">layout</button>
+    <button class="tab"        onclick="switchTab(this,'settings')">settings</button>
     <button class="tab"        onclick="switchTab(this,'device')">device</button>
   </div>
 
-  <div id="tab-settings" class="tab-panel active">
+  <div id="tab-layout" class="tab-panel active">
+    <div class="editor-section">
+      <div class="editor-label">
+        display preview
+        <span class="editor-hint">drag widgets on canvas</span>
+      </div>
+
+      <div class="display-wrapper">
+        <div class="display-outer">
+          <div class="display-canvas" id="canvas">
+
+            <div class="w w-clock" id="w-clock" data-id="clock">00:00</div>
+            <div class="w w-date"  id="w-date"  data-id="date">Mon, 1 Jan</div>
+            <div class="w w-weather" id="w-weather" data-id="weather">
+              <svg id="ico-weather" viewBox="0 0 8 8" fill="#dfffea" style="flex-shrink:0">
+                <circle cx="4" cy="4" r="1.8"/>
+                <line x1="4"   y1="0"   x2="4"   y2="1.4" stroke="#dfffea" stroke-width=".7"/>
+                <line x1="4"   y1="6.6" x2="4"   y2="8"   stroke="#dfffea" stroke-width=".7"/>
+                <line x1="0"   y1="4"   x2="1.4" y2="4"   stroke="#dfffea" stroke-width=".7"/>
+                <line x1="6.6" y1="4"   x2="8"   y2="4"   stroke="#dfffea" stroke-width=".7"/>
+              </svg>
+              <span id="w-temp">0°C</span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="editor-section">
+      <div class="editor-label">widgets</div>
+      <div class="widget-list">
+
+        <div class="widget-row" id="row-clock" onclick="selectWidget('clock')">
+          <span class="widget-name">clock</span>
+          <span class="widget-coords" id="coords-clock">x:14 y:10</span>
+          <div class="size-controls">
+            <button class="sz-btn" onclick="event.stopPropagation();changeSize('clock',-1)">−</button>
+            <span class="sz-val" id="size-clock">3</span>
+            <button class="sz-btn" onclick="event.stopPropagation();changeSize('clock',1)">+</button>
+          </div>
+          <button class="vis-btn" id="vis-clock" onclick="event.stopPropagation();toggleVis('clock')">show</button>
+        </div>
+
+        <div class="widget-row" id="row-date" onclick="selectWidget('date')">
+          <span class="widget-name">date</span>
+          <span class="widget-coords" id="coords-date">x:20 y:38</span>
+          <div class="size-controls">
+            <button class="sz-btn" onclick="event.stopPropagation();changeSize('date',-1)">−</button>
+            <span class="sz-val" id="size-date">1</span>
+            <button class="sz-btn" onclick="event.stopPropagation();changeSize('date',1)">+</button>
+          </div>
+          <button class="vis-btn" id="vis-date" onclick="event.stopPropagation();toggleVis('date')">show</button>
+        </div>
+
+        <div class="widget-row" id="row-weather" onclick="selectWidget('weather')">
+          <span class="widget-name">weather</span>
+          <span class="widget-coords" id="coords-weather">x:10 y:52</span>
+          <div class="size-controls">
+            <button class="sz-btn" onclick="event.stopPropagation();changeSize('weather',-1)">−</button>
+            <span class="sz-val" id="size-weather">1</span>
+            <button class="sz-btn" onclick="event.stopPropagation();changeSize('weather',1)">+</button>
+          </div>
+          <button class="vis-btn" id="vis-weather" onclick="event.stopPropagation();toggleVis('weather')">show</button>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="save-row">
+      <button class="primary" onclick="saveLayout()">save layout</button>
+    </div>
+    <div id="layout-msg"></div>
+
+    <div class="editor-section" style="margin-top:24px">
+      <div class="editor-label">display brightness</div>
+      <div class="brightness-row">
+        <span class="brightness-label">dim</span>
+        <input type="range" id="brightness-slider" min="0" max="255" value="200"
+               oninput="onBrightness(this.value)"
+               onchange="saveBrightness(this.value)">
+        <span class="brightness-label">max</span>
+        <span class="brightness-val" id="brightness-val">200</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-settings" class="tab-panel">
     <form id="form">
       <div class="group">
         <label for="ssid">wi-fi network</label>
@@ -206,109 +379,245 @@ button.secondary:hover { border-color: var(--dim2); color: var(--fg); }
 
   <div id="tab-device" class="tab-panel">
     <div class="info-grid">
-      <div class="info-row"><span class="info-key">sta ip</span>    <span class="info-val acc" id="d-ip">—</span></div>
-      <div class="info-row"><span class="info-key">ap ip</span>     <span class="info-val" id="d-apip">—</span></div>
-      <div class="info-row"><span class="info-key">ap ssid</span>   <span class="info-val">modular</span></div>
-      <div class="info-row"><span class="info-key">hostname</span>  <span class="info-val">modular.local</span></div>
-      <div class="info-row"><span class="info-key">wifi</span>      <span class="info-val" id="d-wifi">—</span></div>
-      <div class="info-row"><span class="info-key">uptime</span>    <span class="info-val" id="d-uptime">—</span></div>
-      <div class="info-row"><span class="info-key">free heap</span> <span class="info-val" id="d-heap">—</span></div>
+      <div class="info-row"><span class="info-key">sta ip</span>   <span class="info-val acc" id="d-ip">—</span></div>
+      <div class="info-row"><span class="info-key">ap ip</span>    <span class="info-val" id="d-apip">—</span></div>
+      <div class="info-row"><span class="info-key">ap ssid</span>  <span class="info-val">modular</span></div>
+      <div class="info-row"><span class="info-key">hostname</span> <span class="info-val">modular.local</span></div>
+      <div class="info-row"><span class="info-key">wifi</span>     <span class="info-val" id="d-wifi">—</span></div>
+      <div class="info-row"><span class="info-key">uptime</span>   <span class="info-val" id="d-uptime">—</span></div>
+      <div class="info-row"><span class="info-key">free heap</span><span class="info-val" id="d-heap">—</span></div>
     </div>
     <button type="button" class="secondary" onclick="loadStatus()">refresh</button>
   </div>
 
 </div>
+</div>
+
 <script>
-(function () {
+(function(){
+'use strict';
 
-window.switchTab = function(btn, name) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('tab-' + name).classList.add('active');
+const SCALE = 3;
+const DW    = 128;
+const DH    = 64;
+const CH    = 8;
+
+const state = {
+  clock:   { x:14, y:10, size:3, visible:true },
+  date:    { x:20, y:38, size:1, visible:true },
+  weather: { x:10, y:52, size:1, visible:true },
+};
+let selected = null;
+const $ = id => document.getElementById(id);
+const ids = ['clock','date','weather'];
+
+function updateWidgetDOM(id) {
+  const s  = state[id];
+  const el = $('w-' + id);
+  if (!el) return;
+
+  el.style.left    = (s.x * SCALE) + 'px';
+  el.style.top     = (s.y * SCALE) + 'px';
+  el.style.display = s.visible ? '' : 'none';
+
+  const fs = s.size * CH * SCALE;
+  el.style.fontSize   = fs + 'px';
+  el.style.lineHeight = '1';
+
+  if (id === 'weather') {
+    const ico = $('ico-weather');
+    if (ico) { ico.style.width = fs + 'px'; ico.style.height = fs + 'px'; }
+  }
+
+  $('coords-' + id).textContent = `x:${s.x} y:${s.y}`;
+  $('size-'   + id).textContent = s.size;
+
+  const vb = $('vis-' + id);
+  vb.textContent = s.visible ? 'show' : 'hide';
+  vb.classList.toggle('hidden-btn', !s.visible);
+
+  el.classList.toggle('selected', selected === id);
+  $('row-' + id)?.classList.toggle('selected-row', selected === id);
+}
+
+function refreshAll() { ids.forEach(updateWidgetDOM); }
+
+function initDrag(el, id) {
+  let active=false, sx, sy, ox, oy;
+
+  const start = (cx,cy) => {
+    active=true; sx=cx; sy=cy;
+    ox=state[id].x; oy=state[id].y;
+    selectWidget(id);
+  };
+  const move = (cx,cy) => {
+    if (!active) return;
+    state[id].x = Math.max(0, Math.min(DW-4, ox + Math.round((cx-sx)/SCALE)));
+    state[id].y = Math.max(0, Math.min(DH-4, oy + Math.round((cy-sy)/SCALE)));
+    updateWidgetDOM(id);
+  };
+  const end = () => { active=false; };
+
+  el.addEventListener('mousedown', e => { e.preventDefault(); start(e.clientX, e.clientY); });
+  window.addEventListener('mousemove', e => { if(active) move(e.clientX, e.clientY); });
+  window.addEventListener('mouseup', end);
+
+  el.addEventListener('touchstart', e => {
+    e.preventDefault();
+    start(e.touches[0].clientX, e.touches[0].clientY);
+  }, {passive:false});
+  window.addEventListener('touchmove', e => {
+    if(active) move(e.touches[0].clientX, e.touches[0].clientY);
+  }, {passive:false});
+  window.addEventListener('touchend', end);
+}
+
+ids.forEach(id => initDrag($('w-'+id), id));
+
+window.selectWidget = id => { selected=id; refreshAll(); };
+window.changeSize   = (id,d) => { state[id].size=Math.max(1,Math.min(4,state[id].size+d)); updateWidgetDOM(id); };
+window.toggleVis    = id => { state[id].visible=!state[id].visible; updateWidgetDOM(id); };
+
+window.onBrightness = function(v) {
+  $('brightness-val').textContent = v;
+  const pct = v / 255;
+  $('canvas').style.opacity = 0.15 + pct * 0.85;
 };
 
-window.togglePass = function() {
-  const inp = document.getElementById('pass');
-  const b   = document.getElementById('eye-btn');
-  inp.type  = inp.type === 'password' ? 'text' : 'password';
-  b.textContent = inp.type === 'password' ? 'show' : 'hide';
+let _brightTimer = null;
+window.saveBrightness = function(v) {
+  clearTimeout(_brightTimer);
+  _brightTimer = setTimeout(async () => {
+    try {
+      await fetch('/brightness', {
+        method: 'POST',
+        body: new URLSearchParams({ value: v })
+      });
+    } catch {}
+  }, 400);
 };
+
+window.saveLayout = async function() {
+  const lm=$('layout-msg'); lm.className=''; lm.textContent='saving...';
+  try {
+    const body=new URLSearchParams({
+      clockX:state.clock.x, clockY:state.clock.y, clockSize:state.clock.size, clockVis:state.clock.visible?'1':'0',
+      dateX:state.date.x,   dateY:state.date.y,   dateSize:state.date.size,   dateVis:state.date.visible?'1':'0',
+      weatherX:state.weather.x, weatherY:state.weather.y, weatherSize:state.weather.size, weatherVis:state.weather.visible?'1':'0',
+    });
+    const j=await (await fetch('/layout',{method:'POST',body})).json();
+    if(!j.ok) throw 0;
+    lm.className='ok'; lm.textContent='saved ✦';
+  } catch { lm.className='err'; lm.textContent='failed (╥﹏╥)'; }
+};
+
+function showOnboarding() { $('screen-onboarding').classList.add('active'); $('screen-app').classList.remove('active'); }
+function showApp()         { $('screen-onboarding').classList.remove('active'); $('screen-app').classList.add('active'); }
 
 async function loadConfig() {
   try {
-    const j = await (await fetch('/config')).json();
-    if (j.ssid)   document.getElementById('ssid').value   = j.ssid;
-    if (j.city)   document.getElementById('city').value   = j.city;
-    if (j.owmkey) document.getElementById('owmkey').value = j.owmkey;
+    const j=await (await fetch('/config')).json();
 
-    const dot = document.getElementById('wifi-dot');
-    const lbl = document.getElementById('wifi-label');
+    if (!j.configured) { showOnboarding(); return; }
+    showApp();
+
+    const dot=$('wifi-dot'), lbl=$('wifi-label');
     if (j.connected) {
-      dot.classList.add('on');
-      lbl.textContent = j.ip || 'connected';
-      document.getElementById('d-ip').textContent  = j.ip || '—';
-      document.getElementById('d-wifi').textContent = 'connected';
-      document.getElementById('d-wifi').className  = 'info-val ok';
+      dot.classList.add('on'); lbl.textContent=j.ip||'connected';
+      $('d-ip').textContent=j.ip||'—';
+      $('d-wifi').textContent='connected'; $('d-wifi').className='info-val ok';
     } else {
-      lbl.textContent = 'ap only';
-      document.getElementById('d-wifi').textContent = 'not connected';
-      document.getElementById('d-wifi').className  = 'info-val err';
+      lbl.textContent='ap only';
+      $('d-wifi').textContent='not connected'; $('d-wifi').className='info-val err';
     }
-  } catch {}
+
+    if(j.ssid)   $('ssid').value=j.ssid;
+    if(j.city)   $('city').value=j.city;
+    if(j.owmkey) $('owmkey').value=j.owmkey;
+
+    const apply=(id,jx,jy,jsz,jv)=>{
+      if(jx!==undefined)  state[id].x=jx;
+      if(jy!==undefined)  state[id].y=jy;
+      if(jsz!==undefined) state[id].size=jsz;
+      if(jv!==undefined)  state[id].visible=!!jv;
+    };
+    apply('clock',   j.clockX,   j.clockY,   j.clockSize,   j.clockVis);
+    apply('date',    j.dateX,    j.dateY,    j.dateSize,    j.dateVis);
+    apply('weather', j.weatherX, j.weatherY, j.weatherSize, j.weatherVis);
+
+    if(j.cachedTime) $('w-clock').textContent=j.cachedTime;
+    if(j.cachedDate) $('w-date').textContent=j.cachedDate;
+    if(j.cachedTemp) $('w-temp').textContent=j.cachedTemp+'°C';
+
+    if(j.brightness !== undefined) {
+      $('brightness-slider').value = j.brightness;
+      $('brightness-val').textContent = j.brightness;
+    }
+
+    refreshAll();
+  } catch { showApp(); refreshAll(); }
 }
 
 window.loadStatus = async function() {
   try {
-    const j = await (await fetch('/status')).json();
-    if (j.uptime   !== undefined) document.getElementById('d-uptime').textContent = fmtUp(j.uptime);
-    if (j.freeHeap !== undefined) document.getElementById('d-heap').textContent   = (j.freeHeap/1024).toFixed(1) + ' KB';
-    if (j.apIP)                   document.getElementById('d-apip').textContent   = j.apIP;
+    const j=await (await fetch('/status')).json();
+    if(j.uptime!==undefined)  $('d-uptime').textContent=fmtUp(j.uptime);
+    if(j.freeHeap!==undefined) $('d-heap').textContent=(j.freeHeap/1024).toFixed(1)+' KB';
+    if(j.apIP)                 $('d-apip').textContent=j.apIP;
   } catch {}
 };
 
-function fmtUp(ms) {
-  const s = Math.floor(ms/1000), m = Math.floor(s/60), h = Math.floor(m/60);
-  return h ? h+'h '+(m%60)+'m' : m ? m+'m '+(s%60)+'s' : s+'s';
-}
+function fmtUp(ms){const s=Math.floor(ms/1000),m=Math.floor(s/60),h=Math.floor(m/60);return h?h+'h '+(m%60)+'m':m?m+'m '+(s%60)+'s':s+'s';}
 
-const form  = document.getElementById('form');
-const btn   = document.getElementById('btn');
-const btext = document.getElementById('btn-text');
-const msg   = document.getElementById('msg');
-
-form.addEventListener('submit', async e => { e.preventDefault(); await doSave(true); });
-window.saveOnly = () => doSave(false);
-
-async function doSave(restart) {
-  const ssid   = document.getElementById('ssid').value.trim();
-  const pass   = document.getElementById('pass').value;
-  const city   = document.getElementById('city').value.trim();
-  const owmkey = document.getElementById('owmkey').value.trim();
-
-  if (!ssid) { flash('wi-fi ssid is required', 'err'); return; }
-  if (!city) { flash('city is required', 'err'); return; }
-
-  btn.disabled = true;
-  btext.textContent = 'saving...';
-  msg.className = ''; msg.textContent = '';
-
+window.obSave = async function() {
+  const ssid=$('ob-ssid').value.trim(), pass=$('ob-pass').value,
+        city=$('ob-city').value.trim(), owmkey=$('ob-owmkey').value.trim();
+  const omsg=$('ob-msg'), obtn=$('ob-btn'), obtxt=$('ob-btn-text');
+  if(!ssid){omsg.className='err';omsg.textContent='wi-fi ssid is required';return;}
+  if(!city){omsg.className='err';omsg.textContent='city is required';return;}
+  obtn.disabled=true; obtxt.textContent='saving...'; omsg.className=''; omsg.textContent='';
   try {
-    const body = new URLSearchParams({ ssid, pass, city, owmkey, restart: restart ? '1' : '0' });
-    const j    = await (await fetch('/save', { method: 'POST', body })).json();
-    if (!j.ok) throw 0;
-    flash(restart ? 'saved! restarting... ✦' : 'ദ്ദി(˵ •̀ ᴗ - ˵ ) ✧', 'ok');
-    btext.textContent = restart ? 'restarting' : 'save & restart';
-    if (!restart) btn.disabled = false;
-  } catch {
-    flash('(╥﹏╥) failed', 'err');
-    btn.disabled = false;
-    btext.textContent = 'save & restart';
-  }
+    const j=await (await fetch('/save',{method:'POST',body:new URLSearchParams({ssid,pass,city,owmkey,restart:'1'})})).json();
+    if(!j.ok) throw 0;
+    omsg.className='ok'; omsg.textContent='saved! restarting... ✦'; obtxt.textContent='restarting';
+  } catch { omsg.className='err'; omsg.textContent='(╥﹏╥) failed'; obtn.disabled=false; obtxt.textContent='save & restart'; }
+};
+
+window.toggleObPass = function() {
+  const i=$('ob-pass'), b=i.nextElementSibling;
+  i.type=i.type==='password'?'text':'password'; b.textContent=i.type==='password'?'show':'hide';
+};
+
+const form=$('form'), btn=$('btn'), btext=$('btn-text'), msg=$('msg');
+form.addEventListener('submit', async e=>{e.preventDefault(); await doSave(true);});
+window.saveOnly=()=>doSave(false);
+
+async function doSave(restart){
+  const ssid=$('ssid').value.trim(), pass=$('pass').value,
+        city=$('city').value.trim(), owmkey=$('owmkey').value.trim();
+  if(!ssid){flash('wi-fi ssid is required','err');return;}
+  if(!city){flash('city is required','err');return;}
+  btn.disabled=true; btext.textContent='saving...'; msg.className=''; msg.textContent='';
+  try {
+    const j=await (await fetch('/save',{method:'POST',body:new URLSearchParams({ssid,pass,city,owmkey,restart:restart?'1':'0'})})).json();
+    if(!j.ok) throw 0;
+    flash(restart?'saved! restarting... ✦':'ദ്ദി(˵ •̀ ᴗ - ˵ ) ✧','ok');
+    btext.textContent=restart?'restarting':'save & restart';
+    if(!restart) btn.disabled=false;
+  } catch { flash('(╥﹏╥) failed','err'); btn.disabled=false; btext.textContent='save & restart'; }
 }
 
-function flash(t, c) { msg.textContent = t; msg.className = c; }
+function flash(t,c){msg.textContent=t;msg.className=c;}
 
+window.togglePass=function(){const i=$('pass'),b=$('eye-btn');i.type=i.type==='password'?'text':'password';b.textContent=i.type==='password'?'show':'hide';};
+
+window.switchTab=function(btn,name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active'); $('tab-'+name).classList.add('active');
+};
+
+refreshAll();
 loadConfig();
 loadStatus();
 
